@@ -126,6 +126,7 @@ body {
   min-height: 56px; font-size: 18px; cursor: pointer; border-top: 1px solid var(--line);
 }
 .opt:first-of-type { border-top: 0; }
+.opt.sub { padding-left: 10px; font-size: 16px; color: var(--muted); border-top-style: dashed; }
 .opt input { position: absolute; opacity: 0; pointer-events: none; }
 .sw { flex: none; width: 54px; height: 32px; border-radius: 99px; background: var(--line); position: relative; transition: background .2s; }
 .sw::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--face); transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
@@ -186,9 +187,9 @@ body {
   <div class="scrim" id="scrim" hidden></div>
   <div class="panel" id="panel" hidden>
     <h2>시계 설정</h2>
-    <label class="opt">초침 보이기<input type="checkbox" id="optSec"><span class="sw"></span></label>
     <label class="opt">5분 단위 숫자<input type="checkbox" id="optMin"><span class="sw"></span></label>
     <label class="opt">현재 시각<input type="checkbox" id="optLive"><span class="sw"></span></label>
+    <label class="opt sub" id="secRow" hidden>└ 초침 보이기<input type="checkbox" id="optSec"><span class="sw"></span></label>
     <label class="opt">시각 상자<input type="checkbox" id="optBox" checked><span class="sw"></span></label>
     <button class="reset" id="reset">12시로 맞추기</button>
     <p class="hint"><b class="h">짧은 빨간 바늘</b>이 시침, <b class="m">긴 파란 바늘</b>이 분침이에요. 바늘을 잡고 돌려 보세요.</p>
@@ -312,10 +313,13 @@ body {
   /* 설정 */
   var optSec = document.getElementById('optSec'), optLive = document.getElementById('optLive'), optBox = document.getElementById('optBox');
   var resetBtn = document.getElementById('reset');
-  function applySec() { showSec = optSec.checked; secHand.style.display = showSec ? '' : 'none'; }
+  /* 초침은 현재 시각 모드에서만 (손으로 돌리는 기본 모드에서는 늘 숨김) */
+  var secRow = document.getElementById('secRow');
+  function applySec() { showSec = optSec.checked; secHand.style.display = (live && showSec) ? '' : 'none'; }
   optSec.addEventListener('change', function () { applySec(); if (!live) draw(total, 0); });
   optLive.addEventListener('change', function () {
     live = optLive.checked; svg.classList.toggle('live', live); resetBtn.disabled = live;
+    secRow.hidden = !live; applySec();
     if (live) { tick(); }
     else {
       cancelAnimationFrame(raf);
