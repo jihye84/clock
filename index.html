@@ -97,8 +97,8 @@ body {
 .readout .s { color: var(--second); font-size: .7em; }
 .readout span:empty { display: none; }
 .readout.wide { width: 8.6em; }
-.app.nobox .readout { display: none; }
-.app.nobox { grid-template-rows: minmax(0,1fr) 0; }
+/* 시각 상자를 꺼도 자리는 그대로 두어 시계 크기·위치가 변하지 않게 */
+.app.nobox .readout { visibility: hidden; }
 
 /* 설정 */
 .gear {
