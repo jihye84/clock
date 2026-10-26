@@ -125,6 +125,13 @@ body {
 .btns button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--rim); }
 .btns #next { background: var(--go); color: #fff; border-color: #1f6e3f; box-shadow: 0 5px 0 #1f6e3f; }
 .btns #next:active { box-shadow: 0 1px 0 #1f6e3f; }
+.btns button { display: inline-flex; align-items: center; justify-content: center; gap: .35em; }
+.btns .key { height: .78em; width: auto; flex: none; opacity: .55; }
+.btns #next .key { opacity: .8; }
+@media (max-width: 600px) {
+  .btns { justify-self: stretch; }
+  .btns button { flex: 1 1 0; min-width: 0; padding: 0 .4em; }
+}
 .btns button:focus-visible { outline: 4px solid var(--hour); outline-offset: 3px; }
 
 /* 가로로 넓은 화면(TV·전자칠판): 시계 가운데, 버튼은 오른쪽 아래 구석 */
@@ -149,7 +156,7 @@ body {
         <button type="button" data-kind="half" aria-pressed="false">30분만</button>
         <button type="button" data-kind="hour" aria-pressed="false">정각만</button>
       </div>
-      <button type="button" class="style-toggle" id="styleToggle" aria-pressed="false"><span class="dot"></span>바늘 바꾸기</button>
+      <button type="button" class="style-toggle" id="styleToggle" aria-pressed="false" aria-keyshortcuts="B" title="키보드 B"><span class="dot"></span>바늘 바꾸기</button>
     </div>
   </div>
 
@@ -169,8 +176,8 @@ body {
   <div class="answer hide" id="answer" aria-live="polite"><span class="h" id="ah"></span><span class="m" id="am"></span></div>
 
   <div class="btns">
-    <button type="button" id="show">정답</button>
-    <button type="button" id="next">다음 문제</button>
+    <button type="button" id="show" aria-keyshortcuts="Enter">정답<svg class="key" viewBox="0 0 30 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="27" height="21" rx="5"/><path d="M21 7v5.5H9.5"/><path d="M12.5 9.5l-3 3 3 3"/></svg></button>
+    <button type="button" id="next" aria-keyshortcuts="Space">다음 문제<svg class="key" viewBox="0 0 42 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="39" height="21" rx="5"/><path d="M11 11v4.5h20V11"/></svg></button>
   </div>
 </div>
 
@@ -283,18 +290,37 @@ body {
     look = randomLook ? randomLookNot(CLASSIC) : CLASSIC;
     paint(look);
   });
-  Array.prototype.forEach.call(document.querySelectorAll('.kind button'), function (btn) {
-    btn.addEventListener('click', function () {
-      kind = btn.dataset.kind;
-      document.querySelectorAll('.kind button').forEach(function (x) { x.setAttribute('aria-pressed', x === btn ? 'true' : 'false'); });
-      count = 0; next();
-    });
+  var kindBtns = Array.prototype.slice.call(document.querySelectorAll('.kind button'));
+  function setKind(k) {
+    kind = k;
+    kindBtns.forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.kind === k ? 'true' : 'false'); });
+    count = 0; next();
+  }
+  kindBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () { setKind(btn.dataset.kind); });
   });
-  /* 키보드: 스페이스·→ 다음 문제, 엔터 정답 */
+  /* 마우스·터치로 누른 버튼은 초점을 바로 놓아서, 그 뒤 키보드가 엉뚱한 버튼을 누르지 않게 */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button');
+    if (b) b.blur();
+  });
+  /* 키보드: 스페이스 = 다음 문제, 엔터 = 정답, 탭 = 섞어서 → 30분만 → 정각만 (Shift+탭은 거꾸로), B = 바늘 바꾸기
+     어느 버튼에 초점이 있든 늘 같은 기능만 하도록, 브라우저 기본 동작은 막아요.
+     B는 한글 입력 상태(ㅠ)에서도 되도록 자판 위치(code)로 확인해요. */
   document.addEventListener('keydown', function (e) {
-    if (e.target && e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;  // 버튼에 초점이 있으면 그 버튼만 누르기
-    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
-    else if (e.key === 'Enter') { e.preventDefault(); show(); }
+    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) {
+      if (e.repeat && (e.key === ' ' || e.key === 'Enter' || e.key === 'Tab')) e.preventDefault();
+      return;
+    }
+    if (e.key === ' ' || e.code === 'Space' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'Enter' || e.code === 'NumpadEnter') { e.preventDefault(); show(); }
+    else if (e.key === 'Tab') {
+      e.preventDefault();
+      var i = kindBtns.findIndex(function (x) { return x.dataset.kind === kind; });
+      var n = kindBtns.length;
+      setKind(kindBtns[(i + (e.shiftKey ? n - 1 : 1)) % n].dataset.kind);
+    }
+    else if (e.code === 'KeyB') { e.preventDefault(); styleToggle.click(); }
   });
 
   /* 우클릭·길게 누르기 메뉴·끌어서 선택 막기 */
