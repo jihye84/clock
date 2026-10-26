@@ -18,6 +18,15 @@
 - 우클릭·길게 누르기 메뉴·글자 선택을 막았습니다.
 - 카카오톡·네이버·페이스북 등 앱 안의 브라우저에서 열면 크롬·사파리로 다시 열리도록 했습니다(아이폰은 안내 화면).
 
+## 시계 읽기 연습 (`practice.html`)
+
+👉 https://jihye84.github.io/clock/practice.html
+
+- **다음 문제**를 누를 때마다 '몇 시' 또는 '몇 시 30분' 시계가 새로 나옵니다(바로 앞 문제와 같은 시각은 나오지 않아요).
+- **정답**을 누르면 시계 아래에 "7시 30분" 같은 시각 상자가 나타납니다.
+- 위쪽에서 문제 종류를 **섞어서 / 30분만 / 정각만**으로 고를 수 있어요.
+- 두 버튼은 전자칠판에서 오른쪽 아래에 있습니다. 키보드로는 스페이스(→)가 다음 문제, 엔터가 정답이에요.
+
 ## 사용한 자료
 
 - 글꼴: [Jua](https://fonts.google.com/specimen/Jua), [Gowun Dodum](https://fonts.google.com/specimen/Gowun+Dodum) — Google Fonts, SIL Open Font License 1.1

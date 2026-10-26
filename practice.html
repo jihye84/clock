@@ -1,0 +1,243 @@
+<meta charset="utf-8">
+<script>
+/* 카카오톡·네이버·페이스북·인스타그램 등 인앱 브라우저에서 열리면 기본 브라우저로 다시 열기 */
+(function () {
+  var ua = navigator.userAgent || '';
+  var url = location.href;
+  /* Claude 미리보기처럼 다른 화면 안에 들어가 있거나, http(s) 주소가 아니면 건너뛰기 */
+  try { if (window.self !== window.top) return; } catch (e) { return; }
+  if (!/^https?:/i.test(url)) return;
+  var inApp = /KAKAOTALK|NAVER\(inapp|FBAN|FBAV|FB_IAB|Instagram|Line\/|DaumApps|everytimeApp|wv\)/i.test(ua);
+  if (/KAKAOTALK/i.test(ua)) { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url); return; }
+  if (/Line\//i.test(ua) && url.indexOf('openExternalBrowser=1') < 0) {
+    location.href = url + (url.indexOf('?') < 0 ? '?' : '&') + 'openExternalBrowser=1'; return;
+  }
+  if (!inApp) return;
+  if (/Android/i.test(ua)) {
+    location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end'; return;
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var box = document.createElement('div');
+    box.setAttribute('role', 'dialog');
+    box.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(13,17,32,.94);color:#eef0f8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font:15px/1.6 system-ui,sans-serif';
+    box.innerHTML = '<strong style="font-size:18px">사파리에서 열어 주세요</strong>' +
+      '<span>이 앱 안의 브라우저에서는 일부 기능이 제대로 작동하지 않을 수 있어요.<br>⋯ 메뉴에서 <b>Safari로 열기</b>를 눌러 주세요.</span>' +
+      '<button id="copyUrl" style="font:inherit;padding:10px 18px;border-radius:999px;border:0;background:#eef0f8;color:#0d1120">주소 복사</button>' +
+      '<button id="stayHere" style="font:inherit;background:none;border:0;color:#9aa3c0;text-decoration:underline">그냥 여기서 보기</button>';
+    document.body.appendChild(box);
+    document.getElementById('copyUrl').onclick = function () {
+      var b = this;
+      (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(
+        function () { b.textContent = '복사했어요'; }, function () { b.textContent = url; });
+    };
+    document.getElementById('stayHere').onclick = function () { box.remove(); };
+  });
+})();
+</script>
+<title>몇 시일까요</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 시계 읽기 연습: 가운데 큰 시계, 그 아래 정답 상자 자리(늘 비워 둠), 오른쪽 아래 큰 버튼 두 개 */
+:root {
+  --bg: #e6eef7;
+  --face: #ffffff;
+  --rim: #24315c;
+  --ink: #24315c;
+  --muted: #6c7896;
+  --hour: #e2483a;
+  --minute: #2f6ad8;
+  --panel: #ffffff;
+  --line: #cfd9e8;
+  --go: #2f9e5b;
+  --f-display: "Jua", "Gowun Dodum", system-ui, sans-serif;
+  --f-body: "Gowun Dodum", system-ui, sans-serif;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; overflow: hidden; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body);
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  height: 100%; display: grid;
+  grid-template-columns: minmax(0,1fr);
+  grid-template-rows: auto minmax(0,1fr) auto auto;
+  grid-template-areas: "top" "clock" "answer" "btns";
+  padding-block: clamp(10px, 2.5vh, 28px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  gap: clamp(8px, 1.8vh, 20px);
+  --boxh: clamp(60px, 12vh, 140px);
+  --btnh: clamp(56px, 9vh, 110px);
+}
+.top { grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.count { font: clamp(18px, 2.6vh, 30px) var(--f-display); color: var(--muted); }
+.count b { color: var(--ink); font-weight: normal; }
+.kind { display: flex; background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 4px; }
+.kind button {
+  font: clamp(15px, 2vh, 22px) var(--f-display); color: var(--muted);
+  border: 0; background: none; border-radius: 999px; min-height: 44px; padding: 0 clamp(10px, 1.4vw, 20px); cursor: pointer;
+}
+.kind button[aria-pressed="true"] { background: var(--rim); color: var(--face); }
+
+.stage { grid-area: clock; min-height: 0; min-width: 0; height: 100%; width: 100%; container-type: size; display: grid; place-items: center; }
+.clock { width: min(100cqw, 100cqh); max-width: 100%; aspect-ratio: 1; display: block; }
+.clock text { font-family: var(--f-display); fill: var(--rim); }
+.hand { transition: transform .5s cubic-bezier(.3,1.3,.5,1); transform-box: view-box; transform-origin: 200px 200px; }
+
+.answer {
+  grid-area: answer; justify-self: center; height: var(--boxh);
+  display: flex; align-items: center; justify-content: center; gap: .35em;
+  width: 6.4em; max-width: 100%; padding: 0 .6em; border-radius: 22px;
+  background: var(--panel); border: 3px solid var(--rim);
+  font-family: var(--f-display); font-size: min(calc(var(--boxh) * .56), 11vw);
+  line-height: 1; white-space: nowrap;
+}
+.answer .h { color: var(--hour); }
+.answer .m { color: var(--minute); }
+.answer span:empty { display: none; }
+.answer.hide { visibility: hidden; }
+.answer.pop { animation: pop .35s ease-out; }
+@keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.btns { grid-area: btns; justify-self: end; display: flex; gap: clamp(10px, 1.4vw, 20px); }
+.btns button {
+  height: var(--btnh); min-width: calc(var(--btnh) * 2.2); padding: 0 1em;
+  font: min(calc(var(--btnh) * .4), 6.4vw) var(--f-display); border-radius: 20px; cursor: pointer; white-space: nowrap;
+  border: 3px solid var(--rim); background: var(--panel); color: var(--ink);
+  box-shadow: 0 5px 0 var(--rim);
+}
+.btns button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--rim); }
+.btns #next { background: var(--go); color: #fff; border-color: #1f6e3f; box-shadow: 0 5px 0 #1f6e3f; }
+.btns #next:active { box-shadow: 0 1px 0 #1f6e3f; }
+.btns button:focus-visible { outline: 4px solid var(--hour); outline-offset: 3px; }
+
+/* 가로로 넓은 화면(TV·전자칠판): 시계 가운데, 버튼은 오른쪽 아래 구석 */
+@media (min-width: 1000px) and (min-aspect-ratio: 4/3) {
+  .app {
+    grid-template-columns: minmax(0,1fr) minmax(0,2.2fr) minmax(0,1fr);
+    grid-template-rows: auto minmax(0,1fr) auto;
+    grid-template-areas: "top top top" ". clock ." ". answer btns";
+    column-gap: 24px;
+  }
+  .btns { flex-direction: column; align-self: end; justify-self: end; }
+}
+@media (prefers-reduced-motion: reduce) { .hand { transition: none; } .answer.pop { animation: none; } }
+</style>
+
+<div class="app">
+  <div class="top">
+    <div class="count"><b id="num">1</b>번째 문제</div>
+    <div class="kind" role="group" aria-label="문제 종류">
+      <button type="button" data-kind="mix" aria-pressed="true">섞어서</button>
+      <button type="button" data-kind="half" aria-pressed="false">30분만</button>
+      <button type="button" data-kind="hour" aria-pressed="false">정각만</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <svg class="clock" viewBox="0 0 400 400" aria-label="시계 문제" role="img">
+      <circle cx="200" cy="200" r="194" fill="#24315c"/>
+      <circle cx="200" cy="200" r="182" fill="#ffffff"/>
+      <g id="ticks"></g>
+      <g id="nums"></g>
+      <rect class="hand" id="hourHand" x="190" y="98" width="20" height="120" rx="10" fill="#e2483a"/>
+      <rect class="hand" id="minHand" x="193.5" y="48" width="13" height="170" rx="6.5" fill="#2f6ad8"/>
+      <circle cx="200" cy="200" r="13" fill="#24315c"/>
+      <circle cx="200" cy="200" r="5" fill="#ffffff"/>
+    </svg>
+  </div>
+
+  <div class="answer hide" id="answer" aria-live="polite"><span class="h" id="ah"></span><span class="m" id="am"></span></div>
+
+  <div class="btns">
+    <button type="button" id="show">정답</button>
+    <button type="button" id="next">다음 문제</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var NS = 'http://www.w3.org/2000/svg', C = 200;
+  var ticks = document.getElementById('ticks');
+  for (var i = 0; i < 60; i++) {
+    var five = i % 5 === 0, a = i * 6 * Math.PI / 180, r1 = five ? 160 : 170;
+    var l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', C + r1 * Math.sin(a)); l.setAttribute('y1', C - r1 * Math.cos(a));
+    l.setAttribute('x2', C + 180 * Math.sin(a)); l.setAttribute('y2', C - 180 * Math.cos(a));
+    l.setAttribute('stroke', '#24315c'); l.setAttribute('stroke-width', five ? 5 : 2);
+    l.setAttribute('stroke-linecap', 'round');
+    ticks.appendChild(l);
+  }
+  var nums = document.getElementById('nums');
+  for (var n = 1; n <= 12; n++) {
+    var b = n * 30 * Math.PI / 180, t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', C + 128 * Math.sin(b)); t.setAttribute('y', C - 128 * Math.cos(b) + 15);
+    t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '44');
+    t.textContent = n; nums.appendChild(t);
+  }
+
+  var hourHand = document.getElementById('hourHand'), minHand = document.getElementById('minHand');
+  var answer = document.getElementById('answer'), ah = document.getElementById('ah'), am = document.getElementById('am');
+  var numEl = document.getElementById('num');
+  var kind = 'mix', count = 0, cur = null;
+  /* 바늘이 늘 시계 방향으로만 돌도록 누적 각도 */
+  var hDeg = 0, mDeg = 0;
+
+  function pick() {
+    var h, m, tries = 0;
+    do {
+      h = 1 + Math.floor(Math.random() * 12);
+      m = kind === 'half' ? 30 : kind === 'hour' ? 0 : (Math.random() < 0.5 ? 0 : 30);
+      tries++;
+    } while (cur && cur.h === h && cur.m === m && tries < 20);
+    return { h: h, m: m };
+  }
+  function turnTo(base, target) { var d = ((target - base) % 360 + 360) % 360; return base + d; }
+
+  function next() {
+    cur = pick(); count++;
+    numEl.textContent = count;
+    answer.classList.add('hide'); answer.classList.remove('pop');
+    hDeg = turnTo(hDeg, (cur.h % 12) * 30 + cur.m / 2);
+    mDeg = turnTo(mDeg, cur.m * 6);
+    hourHand.style.transform = 'rotate(' + hDeg + 'deg)';
+    minHand.style.transform = 'rotate(' + mDeg + 'deg)';
+    ah.textContent = cur.h + '시';
+    am.textContent = cur.m ? cur.m + '분' : '';
+  }
+  function show() {
+    if (!answer.classList.contains('hide')) return;
+    answer.classList.remove('hide');
+    void answer.offsetWidth; answer.classList.add('pop');
+  }
+
+  document.getElementById('next').addEventListener('click', next);
+  document.getElementById('show').addEventListener('click', show);
+  Array.prototype.forEach.call(document.querySelectorAll('.kind button'), function (btn) {
+    btn.addEventListener('click', function () {
+      kind = btn.dataset.kind;
+      document.querySelectorAll('.kind button').forEach(function (x) { x.setAttribute('aria-pressed', x === btn ? 'true' : 'false'); });
+      count = 0; next();
+    });
+  });
+  /* 키보드: 스페이스·→ 다음 문제, 엔터 정답 */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    else if (e.key === 'Enter') { e.preventDefault(); show(); }
+  });
+
+  /* 우클릭·길게 누르기 메뉴·끌어서 선택 막기 */
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.addEventListener('selectstart', function (e) { e.preventDefault(); });
+  document.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+  next();
+})();
+</script>
