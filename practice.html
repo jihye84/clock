@@ -258,7 +258,8 @@ body {
   var look = CLASSIC, randomLook = false;
   function paint(lk) {
     var c = PAIRS[lk.pair], f = SHAPES[lk.shape];
-    hourHand.innerHTML = f(102, 20, c[0]);
+    /* 빅벤풍 바늘은 장식 때문에 길이 차가 덜 느껴져서 시침을 더 짧게 */
+    hourHand.innerHTML = f(lk.shape === 'classic' ? 82 : 102, 20, c[0]);
     minHand.innerHTML = f(152, 13, c[1]);
     document.documentElement.style.setProperty('--hour', c[0]);
     document.documentElement.style.setProperty('--minute', c[1]);
