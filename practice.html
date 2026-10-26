@@ -80,6 +80,16 @@ body {
 .opts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .count { font: clamp(18px, 2.6vh, 30px) var(--f-display); color: var(--muted); }
 .count b { color: var(--ink); font-weight: normal; }
+.lead { display: flex; align-items: center; gap: 10px; }
+/* 모형 시계로 돌아가는 작은 연결 */
+.back {
+  display: inline-flex; align-items: center; gap: 2px; height: 48px; padding: 0 10px 0 6px;
+  border-radius: 999px; background: var(--panel); border: 2px solid var(--line); color: var(--muted); text-decoration: none;
+}
+.back:hover { border-color: var(--minute); color: var(--ink); }
+.back:focus-visible { outline: 3px solid var(--hour); outline-offset: 2px; }
+.back .chev { width: 16px; height: 16px; }
+.back .mini { width: 30px; height: 30px; }
 .kind { display: flex; background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 4px; }
 .kind button {
   font: clamp(15px, 2vh, 22px) var(--f-display); color: var(--muted);
@@ -149,7 +159,10 @@ body {
 
 <div class="app">
   <div class="top">
-    <div class="count"><b id="num">1</b>번째 문제</div>
+    <div class="lead">
+      <a class="back" href="./" aria-label="모형 시계로 돌아가기" title="모형 시계"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#ffffff" stroke="#24315c" stroke-width="3"/><g stroke="#24315c" stroke-width="1.6" stroke-linecap="round"><line x1="20" y1="5.5" x2="20" y2="8"/><line x1="34.5" y1="20" x2="32" y2="20"/><line x1="20" y1="34.5" x2="20" y2="32"/><line x1="5.5" y1="20" x2="8" y2="20"/></g><line x1="20" y1="20" x2="14.3" y2="25.7" stroke="#e2483a" stroke-width="3.6" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="31" stroke="#2f6ad8" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="20" r="2.2" fill="#24315c"/></svg></a>
+      <div class="count"><b id="num">1</b>번째 문제</div>
+    </div>
     <div class="opts">
       <div class="kind" role="group" aria-label="문제 종류">
         <button type="button" data-kind="mix" aria-pressed="true">섞어서</button>

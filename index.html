@@ -140,6 +140,21 @@ body {
 .reset:disabled { opacity: .4; cursor: default; }
 .hint { margin: 4px 0 0; font-size: 14px; color: var(--muted); line-height: 1.5; }
 .hint b.h { color: var(--hour); } .hint b.m { color: var(--minute); }
+/* 시계 읽기 연습으로 가는 연결: 설정판 맨 아래, 선생님 손이 가는 자리 */
+.practice-link {
+  margin-top: 10px; display: flex; align-items: center; gap: 12px;
+  min-height: 64px; padding: 10px 12px 10px 10px; border-radius: 16px;
+  background: var(--bg); border: 2px solid transparent; color: var(--ink); text-decoration: none;
+  transition: border-color .15s, background .15s;
+}
+.practice-link:hover { border-color: var(--minute); background: var(--panel); }
+.practice-link:focus-visible { outline: 3px solid var(--hour); outline-offset: 2px; }
+.practice-link .mini { width: 40px; height: 40px; flex: none; }
+.practice-link .pl-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; line-height: 1.25; }
+.practice-link .pl-title { font: 18px var(--f-display); }
+.practice-link .pl-sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.practice-link .pl-go { width: 18px; height: 18px; flex: none; color: var(--minute); transition: transform .15s; }
+.practice-link:hover .pl-go { transform: translateX(3px); }
 
 /* 가로로 넓은 화면(TV·전자칠판): 설정을 왼쪽 패널로 늘 펼침 */
 @media (min-width: 1200px) and (min-aspect-ratio: 16/10) {
@@ -193,6 +208,11 @@ body {
     <label class="opt">시각 상자<input type="checkbox" id="optBox" checked><span class="sw"></span></label>
     <button class="reset" id="reset">12시로 맞추기</button>
     <p class="hint"><b class="h">짧은 빨간 바늘</b>이 시침, <b class="m">긴 파란 바늘</b>이 분침이에요. 바늘을 잡고 돌려 보세요.</p>
+    <a class="practice-link" href="practice.html">
+      <svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#ffffff" stroke="#24315c" stroke-width="3"/><g stroke="#24315c" stroke-width="1.6" stroke-linecap="round"><line x1="20" y1="5.5" x2="20" y2="8"/><line x1="34.5" y1="20" x2="32" y2="20"/><line x1="20" y1="34.5" x2="20" y2="32"/><line x1="5.5" y1="20" x2="8" y2="20"/></g><line x1="20" y1="20" x2="14.3" y2="25.7" stroke="#e2483a" stroke-width="3.6" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="31" stroke="#2f6ad8" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="20" r="2.2" fill="#24315c"/></svg>
+      <span class="pl-text"><span class="pl-title">시계 읽기 연습</span><span class="pl-sub">몇 시 · 몇 시 30분 문제</span></span>
+      <svg class="pl-go" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h11M10.5 5l5 5-5 5"/></svg>
+    </a>
   </div>
 </div>
 
