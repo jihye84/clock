@@ -76,7 +76,8 @@ body {
   --boxh: clamp(60px, 12vh, 140px);
   --btnh: clamp(56px, 9vh, 110px);
 }
-.top { grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.top { grid-area: top; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .count { font: clamp(18px, 2.6vh, 30px) var(--f-display); color: var(--muted); }
 .count b { color: var(--ink); font-weight: normal; }
 .kind { display: flex; background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 4px; }
@@ -85,11 +86,19 @@ body {
   border: 0; background: none; border-radius: 999px; min-height: 44px; padding: 0 clamp(10px, 1.4vw, 20px); cursor: pointer;
 }
 .kind button[aria-pressed="true"] { background: var(--rim); color: var(--face); }
+.style-toggle {
+  font: clamp(15px, 2vh, 22px) var(--f-display); color: var(--muted); cursor: pointer;
+  background: var(--panel); border: 2px solid var(--line); border-radius: 999px; min-height: 52px; padding: 0 clamp(12px, 1.4vw, 20px);
+  display: flex; align-items: center; gap: 8px;
+}
+.style-toggle .dot { width: 18px; height: 18px; border-radius: 50%; background: conic-gradient(#e2483a 0 25%, #2f6ad8 0 50%, #2f9e5b 0 75%, #f07c1e 0); opacity: .4; }
+.style-toggle[aria-pressed="true"] { color: var(--ink); border-color: var(--rim); }
+.style-toggle[aria-pressed="true"] .dot { opacity: 1; }
 
 .stage { grid-area: clock; min-height: 0; min-width: 0; height: 100%; width: 100%; container-type: size; display: grid; place-items: center; }
-.clock { width: min(100cqw, 100cqh); max-width: 100%; aspect-ratio: 1; display: block; }
+.clock { width: min(100%, 58vh); width: min(100cqw, 100cqh); max-width: 100%; aspect-ratio: 1; display: block; }
 .clock text { font-family: var(--f-display); fill: var(--rim); }
-.hand { transition: transform .5s cubic-bezier(.3,1.3,.5,1); transform-box: view-box; transform-origin: 200px 200px; }
+.hand { transition: transform .9s cubic-bezier(.3,1.15,.5,1); transform-box: view-box; transform-origin: 200px 200px; }
 
 .answer {
   grid-area: answer; justify-self: center; height: var(--boxh);
@@ -134,10 +143,13 @@ body {
 <div class="app">
   <div class="top">
     <div class="count"><b id="num">1</b>번째 문제</div>
-    <div class="kind" role="group" aria-label="문제 종류">
-      <button type="button" data-kind="mix" aria-pressed="true">섞어서</button>
-      <button type="button" data-kind="half" aria-pressed="false">30분만</button>
-      <button type="button" data-kind="hour" aria-pressed="false">정각만</button>
+    <div class="opts">
+      <div class="kind" role="group" aria-label="문제 종류">
+        <button type="button" data-kind="mix" aria-pressed="true">섞어서</button>
+        <button type="button" data-kind="half" aria-pressed="false">30분만</button>
+        <button type="button" data-kind="hour" aria-pressed="false">정각만</button>
+      </div>
+      <button type="button" class="style-toggle" id="styleToggle" aria-pressed="false"><span class="dot"></span>바늘 바꾸기</button>
     </div>
   </div>
 
@@ -147,8 +159,8 @@ body {
       <circle cx="200" cy="200" r="182" fill="#ffffff"/>
       <g id="ticks"></g>
       <g id="nums"></g>
-      <rect class="hand" id="hourHand" x="190" y="98" width="20" height="120" rx="10" fill="#e2483a"/>
-      <rect class="hand" id="minHand" x="193.5" y="48" width="13" height="170" rx="6.5" fill="#2f6ad8"/>
+      <g class="hand" id="hourHand"></g>
+      <g class="hand" id="minHand"></g>
       <circle cx="200" cy="200" r="13" fill="#24315c"/>
       <circle cx="200" cy="200" r="5" fill="#ffffff"/>
     </svg>
@@ -184,6 +196,48 @@ body {
   }
 
   var hourHand = document.getElementById('hourHand'), minHand = document.getElementById('minHand');
+
+  /* 바늘 모양: 늘 시침은 짧고 굵게, 분침은 길고 가늘게 (L = 중심에서 끝까지, W = 굵기) */
+  var SHAPES = {
+    bar: function (L, W, c) {
+      return '<rect x="' + (200 - W / 2) + '" y="' + (200 - L) + '" width="' + W + '" height="' + (L + 18) + '" rx="' + W / 2 + '" fill="' + c + '"/>';
+    },
+    arrow: function (L, W, c) {
+      var tip = W * 2.4, y = 200 - L;
+      return '<rect x="' + (200 - W * .35) + '" y="' + (y + tip - 2) + '" width="' + W * .7 + '" height="' + (L - tip + 20) + '" rx="' + W * .35 + '" fill="' + c + '"/>' +
+        '<path d="M200 ' + y + ' L' + (200 + W * 1.1) + ' ' + (y + tip) + ' L' + (200 - W * 1.1) + ' ' + (y + tip) + 'Z" fill="' + c + '" stroke="' + c + '" stroke-width="4" stroke-linejoin="round"/>';
+    },
+    leaf: function (L, W, c) {
+      var y = 200 - L, k = W * 1.1;
+      return '<path d="M200 ' + y + ' C' + (200 + k) + ' ' + (y + L * .35) + ' ' + (200 + k) + ' ' + (y + L * .7) + ' 200 218 C' + (200 - k) + ' ' + (y + L * .7) + ' ' + (200 - k) + ' ' + (y + L * .35) + ' 200 ' + y + 'Z" fill="' + c + '"/>';
+    },
+    ball: function (L, W, c) {
+      var r = W * .95;
+      return '<rect x="' + (200 - W * .3) + '" y="' + (200 - L + r) + '" width="' + W * .6 + '" height="' + (L - r + 18) + '" rx="' + W * .3 + '" fill="' + c + '"/>' +
+        '<circle cx="200" cy="' + (200 - L + r) + '" r="' + r + '" fill="' + c + '"/>';
+    }
+  };
+  /* 시침·분침 색 짝: 흰 바탕에서 잘 보이고 서로 확실히 다른 색끼리 */
+  var PAIRS = [
+    ['#e2483a', '#2f6ad8'], ['#f07c1e', '#7b4bc4'], ['#2f9e5b', '#e0508f'],
+    ['#7b4bc4', '#1a9aa0'], ['#e0508f', '#2f6ad8'], ['#1a9aa0', '#e2483a'],
+    ['#2f6ad8', '#f07c1e'], ['#c0392b', '#2f9e5b']
+  ];
+  var CLASSIC = { shape: 'bar', pair: 0 };
+  var look = CLASSIC, randomLook = false;
+  function paint(lk) {
+    var c = PAIRS[lk.pair], f = SHAPES[lk.shape];
+    hourHand.innerHTML = f(102, 20, c[0]);
+    minHand.innerHTML = f(152, 13, c[1]);
+    document.documentElement.style.setProperty('--hour', c[0]);
+    document.documentElement.style.setProperty('--minute', c[1]);
+  }
+  function randomLookNot(prev) {
+    var keys = Object.keys(SHAPES), lk;
+    do { lk = { shape: keys[Math.floor(Math.random() * keys.length)], pair: Math.floor(Math.random() * PAIRS.length) }; }
+    while (lk.shape === prev.shape && lk.pair === prev.pair);
+    return lk;
+  }
   var answer = document.getElementById('answer'), ah = document.getElementById('ah'), am = document.getElementById('am');
   var numEl = document.getElementById('num');
   var kind = 'mix', count = 0, cur = null;
@@ -206,7 +260,9 @@ body {
     numEl.textContent = count;
     answer.classList.add('hide'); answer.classList.remove('pop');
     hDeg = turnTo(hDeg, (cur.h % 12) * 30 + cur.m / 2);
-    mDeg = turnTo(mDeg, cur.m * 6);
+    /* 분침은 늘 한 바퀴 더 돌고 제자리를 찾아가요 (30분만 문제에서도 6에 멈춰 있지 않게) */
+    mDeg = turnTo(mDeg, cur.m * 6) + 360;
+    if (randomLook) { look = randomLookNot(look); paint(look); }
     hourHand.style.transform = 'rotate(' + hDeg + 'deg)';
     minHand.style.transform = 'rotate(' + mDeg + 'deg)';
     ah.textContent = cur.h + '시';
@@ -220,6 +276,13 @@ body {
 
   document.getElementById('next').addEventListener('click', next);
   document.getElementById('show').addEventListener('click', show);
+  var styleToggle = document.getElementById('styleToggle');
+  styleToggle.addEventListener('click', function () {
+    randomLook = !randomLook;
+    styleToggle.setAttribute('aria-pressed', randomLook ? 'true' : 'false');
+    look = randomLook ? randomLookNot(CLASSIC) : CLASSIC;
+    paint(look);
+  });
   Array.prototype.forEach.call(document.querySelectorAll('.kind button'), function (btn) {
     btn.addEventListener('click', function () {
       kind = btn.dataset.kind;
@@ -229,6 +292,7 @@ body {
   });
   /* 키보드: 스페이스·→ 다음 문제, 엔터 정답 */
   document.addEventListener('keydown', function (e) {
+    if (e.target && e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;  // 버튼에 초점이 있으면 그 버튼만 누르기
     if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
     else if (e.key === 'Enter') { e.preventDefault(); show(); }
   });
@@ -238,6 +302,7 @@ body {
   document.addEventListener('selectstart', function (e) { e.preventDefault(); });
   document.addEventListener('dragstart', function (e) { e.preventDefault(); });
 
+  paint(look);
   next();
 })();
 </script>
