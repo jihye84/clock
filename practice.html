@@ -222,13 +222,37 @@ body {
       var r = W * .95;
       return '<rect x="' + (200 - W * .3) + '" y="' + (200 - L + r) + '" width="' + W * .6 + '" height="' + (L - r + 18) + '" rx="' + W * .3 + '" fill="' + c + '"/>' +
         '<circle cx="200" cy="' + (200 - L + r) + '" r="' + r + '" fill="' + c + '"/>';
+    },
+    /* 날렵하고 기다란 삼각형 뿔 */
+    spear: function (L, W, c) {
+      var b = W * W * .046, y = 200 - L;   /* 시침은 훨씬 넓게, 분침은 아주 가늘게 */
+      return '<path d="M200 ' + y + ' L' + (200 + b) + ' 200 L200 214 L' + (200 - b) + ' 200Z" fill="' + c + '" stroke="' + c + '" stroke-width="2" stroke-linejoin="round"/>';
+    },
+    /* 빅벤처럼 고전적인 바늘: 가는 몸통, 속이 빈 고리 장식, 뾰족한 촉, 뒤쪽 동그란 추 */
+    classic: function (L, W, c) {
+      var y = 200 - L, s = W * .3, ry = y + L * .42, rr = W * .78;
+      return '<rect x="' + (200 - s) + '" y="' + (y + L * .25) + '" width="' + 2 * s + '" height="' + (L * .75 + 24) + '" rx="' + s + '" fill="' + c + '"/>' +
+        '<path d="M200 ' + y + ' L' + (200 + W * .5) + ' ' + (y + L * .28) + ' L200 ' + (y + L * .24) + ' L' + (200 - W * .5) + ' ' + (y + L * .28) + 'Z" fill="' + c + '" stroke="' + c + '" stroke-width="2" stroke-linejoin="round"/>' +
+        '<path d="M200 ' + (ry - rr * 1.5) + ' L' + (200 + rr) + ' ' + ry + ' L200 ' + (ry + rr * 1.5) + ' L' + (200 - rr) + ' ' + ry + 'Z" fill="#ffffff" stroke="' + c + '" stroke-width="' + W * .3 + '" stroke-linejoin="round"/>' +
+        '<circle cx="200" cy="' + (y + L * .7) + '" r="' + W * .42 + '" fill="#ffffff" stroke="' + c + '" stroke-width="' + W * .24 + '"/>' +
+        '<circle cx="200" cy="222" r="' + W * .55 + '" fill="' + c + '"/>';
+    },
+    /* 끝 가까이에 속이 빈 동그라미가 있는 고전 시계 바늘 */
+    moon: function (L, W, c) {
+      var y = 200 - L, s = W * .26, r = W * .7, cy = y + L * .16 + r;
+      return '<rect x="' + (200 - s) + '" y="' + cy + '" width="' + 2 * s + '" height="' + (200 - cy + 20) + '" rx="' + s + '" fill="' + c + '"/>' +
+        '<path d="M200 ' + y + ' L' + (200 + s * 1.6) + ' ' + (cy - r) + ' L' + (200 - s * 1.6) + ' ' + (cy - r) + 'Z" fill="' + c + '"/>' +
+        '<circle cx="200" cy="' + cy + '" r="' + r + '" fill="#ffffff" stroke="' + c + '" stroke-width="' + W * .32 + '"/>';
     }
   };
   /* 시침·분침 색 짝: 흰 바탕에서 잘 보이고 서로 확실히 다른 색끼리 */
   var PAIRS = [
     ['#e2483a', '#2f6ad8'], ['#f07c1e', '#7b4bc4'], ['#2f9e5b', '#e0508f'],
     ['#7b4bc4', '#1a9aa0'], ['#e0508f', '#2f6ad8'], ['#1a9aa0', '#e2483a'],
-    ['#2f6ad8', '#f07c1e'], ['#c0392b', '#2f9e5b']
+    ['#2f6ad8', '#f07c1e'], ['#c0392b', '#2f9e5b'],
+    /* 실제 시계처럼 두 바늘이 같은 색 (길이로만 구별) */
+    ['#1d1d22', '#1d1d22'], ['#24315c', '#24315c'], ['#1d1d22', '#1d1d22'],
+    ['#8a6a1f', '#1d1d22'], ['#1d1d22', '#c0392b']
   ];
   var CLASSIC = { shape: 'bar', pair: 0 };
   var look = CLASSIC, randomLook = false;
