@@ -154,7 +154,8 @@ body {
   }
   .btns { flex-direction: column; align-self: end; justify-self: end; }
 }
-@media (prefers-reduced-motion: reduce) { .hand { transition: none; } .answer.pop { animation: none; } }
+/* 바늘이 도는 모습은 수업 내용이라 '애니메이션 끄기' 설정에서도 그대로 돌게 둠 (정답 상자의 톡 튀기만 끄기) */
+@media (prefers-reduced-motion: reduce) { .answer.pop { animation: none; } }
 </style>
 
 <div class="app">
