@@ -102,8 +102,7 @@ body {
   padding: .22em .7em; border-radius: 22px; background: var(--panel); border: 3px solid var(--rim);
   transition: border-color .2s, background .2s;
 }
-.target .h { color: var(--hour); }
-.target .m { color: var(--minute); }
+.target .h, .target .m { color: var(--ink); }
 .target .m:empty { display: none; }
 .target .say { font-size: .42em; color: var(--muted); align-self: center; }
 .target.solved { border-color: var(--ok); }
@@ -203,7 +202,8 @@ body {
   /* 보기 하나 = 시침 각도·길이·굵기, 분침 각도·길이·굵기 */
   function clockSVG(o) {
     return '<svg class="clk" viewBox="0 0 400 400" aria-hidden="true">' + face +
-      hand(o.ha, o.hl, o.hw, '#e2483a') + hand(o.ma, o.ml, o.mw, '#2f6ad8') +
+      /* 실제 시계처럼 두 바늘 모두 검정: 색이 아니라 길이·굵기로 구별하기 */
+      hand(o.ha, o.hl, o.hw, '#1d1d22') + hand(o.ma, o.ml, o.mw, '#1d1d22') +
       '<circle cx="200" cy="200" r="13" fill="#24315c"/><circle cx="200" cy="200" r="5" fill="#ffffff"/></svg>';
   }
   function mk(ha, ma, extra) {
