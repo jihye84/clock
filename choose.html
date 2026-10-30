@@ -1,0 +1,341 @@
+<meta charset="utf-8">
+<script>
+/* 카카오톡·네이버·페이스북·인스타그램 등 인앱 브라우저에서 열리면 기본 브라우저로 다시 열기 */
+(function () {
+  var ua = navigator.userAgent || '';
+  var url = location.href;
+  /* Claude 미리보기처럼 다른 화면 안에 들어가 있거나, http(s) 주소가 아니면 건너뛰기 */
+  try { if (window.self !== window.top) return; } catch (e) { return; }
+  if (!/^https?:/i.test(url)) return;
+  var inApp = /KAKAOTALK|NAVER\(inapp|FBAN|FBAV|FB_IAB|Instagram|Line\/|DaumApps|everytimeApp|wv\)/i.test(ua);
+  if (/KAKAOTALK/i.test(ua)) { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url); return; }
+  if (/Line\//i.test(ua) && url.indexOf('openExternalBrowser=1') < 0) {
+    location.href = url + (url.indexOf('?') < 0 ? '?' : '&') + 'openExternalBrowser=1'; return;
+  }
+  if (!inApp) return;
+  if (/Android/i.test(ua)) {
+    location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end'; return;
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var box = document.createElement('div');
+    box.setAttribute('role', 'dialog');
+    box.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(13,17,32,.94);color:#eef0f8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font:15px/1.6 system-ui,sans-serif';
+    box.innerHTML = '<strong style="font-size:18px">사파리에서 열어 주세요</strong>' +
+      '<span>이 앱 안의 브라우저에서는 일부 기능이 제대로 작동하지 않을 수 있어요.<br>⋯ 메뉴에서 <b>Safari로 열기</b>를 눌러 주세요.</span>' +
+      '<button id="copyUrl" style="font:inherit;padding:10px 18px;border-radius:999px;border:0;background:#eef0f8;color:#0d1120">주소 복사</button>' +
+      '<button id="stayHere" style="font:inherit;background:none;border:0;color:#9aa3c0;text-decoration:underline">그냥 여기서 보기</button>';
+    document.body.appendChild(box);
+    document.getElementById('copyUrl').onclick = function () {
+      var b = this;
+      (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(
+        function () { b.textContent = '복사했어요'; }, function () { b.textContent = url; });
+    };
+    document.getElementById('stayHere').onclick = function () { box.remove(); };
+  });
+})();
+</script>
+<title>알맞은 시계 찾기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* 위에 목표 시각, 가운데 시계 보기 4개, 오른쪽 아래 다음 문제 */
+:root {
+  --bg: #e6eef7;
+  --face: #ffffff;
+  --rim: #24315c;
+  --ink: #24315c;
+  --muted: #6c7896;
+  --hour: #e2483a;
+  --minute: #2f6ad8;
+  --panel: #ffffff;
+  --line: #cfd9e8;
+  --go: #2f9e5b;
+  --ok: #2f9e5b;
+  --no: #d8402f;
+  --f-display: "Jua", "Gowun Dodum", system-ui, sans-serif;
+  --f-body: "Gowun Dodum", system-ui, sans-serif;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; overflow: hidden; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body);
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  height: 100%; display: grid;
+  grid-template-columns: minmax(0,1fr);
+  grid-template-rows: auto auto minmax(0,1fr) auto;
+  padding-block: clamp(10px, 2.2vh, 26px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  gap: clamp(8px, 1.6vh, 18px);
+  --btnh: clamp(56px, 8.5vh, 104px);
+}
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.lead { display: flex; align-items: center; gap: 10px; }
+.back {
+  display: inline-flex; align-items: center; gap: 2px; height: 48px; padding: 0 10px 0 6px;
+  border-radius: 999px; background: var(--panel); border: 2px solid var(--line); color: var(--muted); text-decoration: none;
+}
+.back:hover { border-color: var(--minute); color: var(--ink); }
+.back .chev { width: 16px; height: 16px; }
+.back .mini { width: 30px; height: 30px; }
+.score { font: clamp(17px, 2.4vh, 28px) var(--f-display); color: var(--muted); white-space: nowrap; }
+.score b { color: var(--ink); font-weight: normal; }
+.score .star { color: var(--ok); }
+.kind { display: flex; background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 4px; }
+.kind button {
+  font: clamp(15px, 2vh, 22px) var(--f-display); color: var(--muted);
+  border: 0; background: none; border-radius: 999px; min-height: 44px; padding: 0 clamp(10px, 1.4vw, 20px); cursor: pointer;
+}
+.kind button[aria-pressed="true"] { background: var(--rim); color: var(--face); }
+
+/* 목표 시각 */
+.target {
+  justify-self: center; display: flex; align-items: center; gap: .4em;
+  font: min(clamp(30px, 7.5vh, 88px), 10vw) var(--f-display); line-height: 1; white-space: nowrap; max-width: 100%;
+  padding: .22em .7em; border-radius: 22px; background: var(--panel); border: 3px solid var(--rim);
+  transition: border-color .2s, background .2s;
+}
+.target .h { color: var(--hour); }
+.target .m { color: var(--minute); }
+.target .m:empty { display: none; }
+.target .say { font-size: .42em; color: var(--muted); align-self: center; }
+.target.solved { border-color: var(--ok); }
+.target.solved .say { color: var(--ok); }
+
+/* 보기 4개: 좁으면 2×2, 가로로 넓으면 한 줄 */
+.choices { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); grid-template-rows: repeat(2, minmax(0,1fr)); gap: clamp(8px, 1.6vh, 20px); }
+@media (min-aspect-ratio: 3/2) { .choices { grid-template-columns: repeat(4, minmax(0,1fr)); grid-template-rows: minmax(0,1fr); } }
+.opt {
+  position: relative; min-width: 0; min-height: 0; padding: 0; margin: 0; border: 0; background: none; cursor: pointer;
+  container-type: size; display: grid; place-items: center; border-radius: 24px; font: inherit; color: inherit;
+}
+.opt .clk {
+  width: min(100%, 40vh); width: min(96cqw, 96cqh); aspect-ratio: 1; display: block;
+  border-radius: 50%; transition: transform .15s, opacity .25s, filter .25s;
+}
+@media (hover: hover) { .opt:not([disabled]):hover .clk { transform: scale(1.03); } }
+.opt .num {
+  position: absolute; left: calc(50cqw - 48cqmin); top: calc(50cqh - 48cqmin); width: clamp(26px, 3.4vh, 40px); height: clamp(26px, 3.4vh, 40px); border-radius: 50%;
+  background: var(--panel); border: 2px solid var(--line); color: var(--muted);
+  font: clamp(14px, 2vh, 22px) var(--f-display); display: grid; place-items: center;
+}
+.opt.wrong .clk { opacity: .35; filter: grayscale(.6); }
+.opt.wrong { animation: shake .4s; cursor: default; }
+.opt .mark { position: absolute; inset: 0; display: none; place-items: center; pointer-events: none; }
+.opt .mark svg { width: min(60cqw, 60cqh); height: min(60cqw, 60cqh); }
+.opt.wrong .mark.no { display: grid; }
+.opt.right .mark.ok { display: grid; }
+/* 맞힌 시계는 바늘이 잘 보이도록 동그라미 표시를 시계 오른쪽 위 가장자리에 */
+.opt .mark.ok { place-items: start end; padding: calc(50cqh - 49cqmin) calc(50cqw - 49cqmin) 0 0; }
+.opt .mark.ok svg { width: 26cqmin; height: 26cqmin; filter: drop-shadow(0 2px 4px rgba(0,0,0,.2)); }
+.opt.right .clk { box-shadow: 0 0 0 clamp(5px, .8vh, 10px) var(--ok); }
+.opt:focus-visible { outline: 4px solid var(--hour); outline-offset: 2px; }
+@keyframes shake { 0%,100% { transform: none; } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+
+.bottom { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.hint { margin-right: auto; font-size: clamp(13px, 1.8vh, 20px); color: var(--muted); }
+.next {
+  height: var(--btnh); min-width: calc(var(--btnh) * 2.4); padding: 0 1em;
+  font: min(calc(var(--btnh) * .4), 6.4vw) var(--f-display); border-radius: 20px; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; gap: .35em;
+  background: var(--go); color: #fff; border: 3px solid #1f6e3f; box-shadow: 0 5px 0 #1f6e3f;
+}
+.next:active { transform: translateY(4px); box-shadow: 0 1px 0 #1f6e3f; }
+.next .key { height: .78em; width: auto; opacity: .8; }
+.next.ready { animation: nudge 1.2s ease-in-out infinite; }
+@keyframes nudge { 0%,100% { transform: none; } 50% { transform: translateY(-4px); } }
+@media (max-width: 600px) { .hint { display: none; } .next { flex: 1; } }
+/* 정답 표시의 흔들림·통통 효과만 끄기 (바늘이나 판정 표시는 그대로) */
+@media (prefers-reduced-motion: reduce) { .opt.wrong, .next.ready { animation: none; } }
+</style>
+
+<div class="app">
+  <div class="top">
+    <div class="lead">
+      <a class="back" href="./" aria-label="모형 시계로 돌아가기" title="모형 시계"><svg class="chev" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg><svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#ffffff" stroke="#24315c" stroke-width="3"/><g stroke="#24315c" stroke-width="1.6" stroke-linecap="round"><line x1="20" y1="5.5" x2="20" y2="8"/><line x1="34.5" y1="20" x2="32" y2="20"/><line x1="20" y1="34.5" x2="20" y2="32"/><line x1="5.5" y1="20" x2="8" y2="20"/></g><line x1="20" y1="20" x2="14.3" y2="25.7" stroke="#e2483a" stroke-width="3.6" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="31" stroke="#2f6ad8" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="20" r="2.2" fill="#24315c"/></svg></a>
+      <div class="score">맞힘 <b id="good">0</b> <span class="star">/</span> <b id="total">0</b></div>
+    </div>
+    <div class="kind" role="group" aria-label="문제 종류">
+      <button type="button" data-kind="mix" aria-pressed="true">섞어서</button>
+      <button type="button" data-kind="half" aria-pressed="false">30분만</button>
+      <button type="button" data-kind="hour" aria-pressed="false">정각만</button>
+    </div>
+  </div>
+
+  <div class="target" id="target" aria-live="polite"><span class="h" id="th"></span><span class="m" id="tm"></span><span class="say" id="say">시계는?</span></div>
+
+  <div class="choices" id="choices"></div>
+
+  <div class="bottom">
+    <span class="hint">맞는 시계를 눌러 보세요</span>
+    <button type="button" class="next" id="next" aria-keyshortcuts="Space">다음 문제<svg class="key" viewBox="0 0 42 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="39" height="21" rx="5"/><path d="M11 11v4.5h20V11"/></svg></button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var C = 200, SHORT = 98, LONG = 150, WS = 20, WL = 12;
+
+  /* 시계 판(눈금·숫자)은 한 번만 만들어 두고 재사용 */
+  var face = '<circle cx="200" cy="200" r="194" fill="#24315c"/><circle cx="200" cy="200" r="182" fill="#ffffff"/>';
+  for (var i = 0; i < 60; i++) {
+    var five = i % 5 === 0, a = i * 6 * Math.PI / 180, r1 = five ? 160 : 170;
+    face += '<line x1="' + (C + r1 * Math.sin(a)).toFixed(1) + '" y1="' + (C - r1 * Math.cos(a)).toFixed(1) +
+      '" x2="' + (C + 180 * Math.sin(a)).toFixed(1) + '" y2="' + (C - 180 * Math.cos(a)).toFixed(1) +
+      '" stroke="#24315c" stroke-width="' + (five ? 5 : 2) + '" stroke-linecap="round"/>';
+  }
+  for (var n = 1; n <= 12; n++) {
+    var b = n * 30 * Math.PI / 180;
+    face += '<text x="' + (C + 128 * Math.sin(b)).toFixed(1) + '" y="' + (C - 128 * Math.cos(b) + 15).toFixed(1) +
+      '" text-anchor="middle" font-size="44" font-family="Jua, Gowun Dodum, sans-serif" fill="#24315c">' + n + '</text>';
+  }
+  function hand(angle, len, w, color) {
+    return '<rect x="' + (200 - w / 2) + '" y="' + (200 - len) + '" width="' + w + '" height="' + (len + 18) + '" rx="' + w / 2 +
+      '" fill="' + color + '" transform="rotate(' + angle + ' 200 200)"/>';
+  }
+  /* 보기 하나 = 시침 각도·길이·굵기, 분침 각도·길이·굵기 */
+  function clockSVG(o) {
+    return '<svg class="clk" viewBox="0 0 400 400" aria-hidden="true">' + face +
+      hand(o.ha, o.hl, o.hw, '#e2483a') + hand(o.ma, o.ml, o.mw, '#2f6ad8') +
+      '<circle cx="200" cy="200" r="13" fill="#24315c"/><circle cx="200" cy="200" r="5" fill="#ffffff"/></svg>';
+  }
+  function mk(ha, ma, extra) {
+    var o = { ha: ((ha % 360) + 360) % 360, ma: ((ma % 360) + 360) % 360, hl: SHORT, hw: WS, ml: LONG, mw: WL };
+    for (var k in extra) o[k] = extra[k];
+    return o;
+  }
+  function H(h) { return ((h % 12) + 12) % 12 * 30; }
+  function sig(o) { return [Math.round(o.ha), Math.round(o.ma), o.hl, o.ml, o.hw, o.mw].join(','); }
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  /* 틀린 보기 만들기: 아이들이 실제로 많이 헷갈리는 모양 위주 */
+  function distractors(h, m) {
+    var ha = H(h) + m / 2, ma = m * 6;
+    var near = [], other = [];
+    if (m === 30) {
+      near.push(mk(H(h + 1) + 15, 180));          // 한 시간 뒤 (12시 30분 → 1시 30분)
+      near.push(mk(H(h - 1) + 15, 180));          // 한 시간 앞 (12시 30분 → 11시 30분)
+      other.push(mk(H(h), 180));                  // 짧은바늘이 숫자를 정확히 가리킴
+      other.push(mk(ma, ha, { hl: SHORT, ml: LONG }));   // 두 바늘 자리 바뀜
+      other.push(mk(ha, ma, { hl: LONG, hw: WS }));      // 둘 다 긴바늘
+      other.push(mk(H(h), 0));                    // 정각으로 그림
+    } else {
+      near.push(mk(H(h + 1), 0));                 // 한 시간 뒤
+      near.push(mk(H(h - 1), 0));                 // 한 시간 앞
+      other.push(mk(H(h) + 15, 180));             // 30분으로 그림
+      other.push(mk(H(h), 180));                  // 짧은바늘은 맞는데 긴바늘이 6
+      if (H(h) !== 0) other.push(mk(0, H(h)));    // 두 바늘 자리 바뀜
+      other.push(mk(ha, ma, { hl: LONG, hw: WS }));      // 둘 다 긴바늘
+      other.push(mk(H(h) + 15, 0));               // 짧은바늘이 숫자 사이
+    }
+    shuffle(near); shuffle(other);
+    var pool = [near[0]].concat(other, near.slice(1));
+    var seen = {}, out = [];
+    seen[sig(mk(ha, ma))] = 1;
+    for (var i = 0; i < pool.length && out.length < 3; i++) {
+      var s = sig(pool[i]);
+      if (!seen[s]) { seen[s] = 1; out.push(pool[i]); }
+    }
+    return out;
+  }
+
+  var el = {
+    target: document.getElementById('target'), th: document.getElementById('th'), tm: document.getElementById('tm'),
+    say: document.getElementById('say'), choices: document.getElementById('choices'), next: document.getElementById('next'),
+    good: document.getElementById('good'), total: document.getElementById('total')
+  };
+  var kind = 'mix', cur = null, solved = false, firstTry = true, good = 0, total = 0;
+  var OK = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#2f9e5b" opacity=".92"/><path d="M28 52l15 15 30-32" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var NO = '<svg viewBox="0 0 100 100"><path d="M26 26l48 48M74 26L26 74" stroke="#d8402f" stroke-width="12" stroke-linecap="round"/></svg>';
+
+  function pickTime() {
+    var h, m, tries = 0;
+    do {
+      h = 1 + Math.floor(Math.random() * 12);
+      m = kind === 'half' ? 30 : kind === 'hour' ? 0 : (Math.random() < 0.5 ? 0 : 30);
+    } while (cur && cur.h === h && cur.m === m && ++tries < 20);
+    return { h: h, m: m };
+  }
+
+  function next() {
+    cur = pickTime(); solved = false; firstTry = true;
+    el.th.textContent = cur.h + '시';
+    el.tm.textContent = cur.m ? cur.m + '분' : '';
+    el.say.textContent = '시계는?';
+    el.target.classList.remove('solved');
+    el.next.classList.remove('ready');
+    var right = mk(H(cur.h) + cur.m / 2, cur.m * 6);
+    right.correct = true;
+    var opts = shuffle([right].concat(distractors(cur.h, cur.m)));
+    el.choices.innerHTML = '';
+    opts.forEach(function (o, i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt';
+      b.setAttribute('aria-label', (i + 1) + '번 시계');
+      b.innerHTML = clockSVG(o) + '<span class="num">' + (i + 1) + '</span><span class="mark ok">' + OK + '</span><span class="mark no">' + NO + '</span>';
+      b.addEventListener('click', function () { choose(b, o); });
+      el.choices.appendChild(b);
+    });
+  }
+
+  function choose(b, o) {
+    if (solved || b.classList.contains('wrong')) return;
+    if (o.correct) {
+      solved = true; total++; if (firstTry) good++;
+      el.good.textContent = good; el.total.textContent = total;
+      b.classList.add('right');
+      el.target.classList.add('solved');
+      el.say.textContent = firstTry ? '정답!' : '찾았어요!';
+      Array.prototype.forEach.call(el.choices.children, function (x) { if (x !== b) x.disabled = true; });
+      el.next.classList.add('ready');
+    } else {
+      firstTry = false;
+      b.classList.remove('wrong'); void b.offsetWidth; b.classList.add('wrong');
+      el.say.textContent = '다시 찾아봐요';
+    }
+  }
+
+  el.next.addEventListener('click', next);
+  var kindBtns = Array.prototype.slice.call(document.querySelectorAll('.kind button'));
+  function setKind(k) {
+    kind = k;
+    kindBtns.forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.kind === k ? 'true' : 'false'); });
+    good = 0; total = 0; el.good.textContent = 0; el.total.textContent = 0;
+    next();
+  }
+  kindBtns.forEach(function (btn) { btn.addEventListener('click', function () { setKind(btn.dataset.kind); }); });
+
+  /* 마우스·터치로 누른 버튼은 초점을 바로 놓기 */
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('button'); if (b) b.blur(); });
+  /* 키보드: 스페이스 = 다음 문제, 1~4 = 보기 고르기, 탭 = 문제 종류 바꾸기 */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.repeat) { if (e.key === ' ' || e.key === 'Tab') e.preventDefault(); return; }
+    if (e.key === ' ' || e.code === 'Space' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (/^Digit[1-4]$|^Numpad[1-4]$/.test(e.code)) {
+      e.preventDefault();
+      var b = el.choices.children[Number(e.code.slice(-1)) - 1];
+      if (b) b.click();
+    }
+    else if (e.key === 'Tab') {
+      e.preventDefault();
+      var i = kindBtns.findIndex(function (x) { return x.dataset.kind === kind; }), n = kindBtns.length;
+      setKind(kindBtns[(i + (e.shiftKey ? n - 1 : 1)) % n].dataset.kind);
+    }
+  });
+
+  /* 우클릭·길게 누르기 메뉴·끌어서 선택 막기 */
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.addEventListener('selectstart', function (e) { e.preventDefault(); });
+  document.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+  next();
+})();
+</script>

@@ -141,6 +141,7 @@ body {
 .hint { margin: 4px 0 0; font-size: 14px; color: var(--muted); line-height: 1.5; }
 .hint b.h { color: var(--hour); } .hint b.m { color: var(--minute); }
 /* 시계 읽기 연습으로 가는 연결: 설정판 맨 아래, 선생님 손이 가는 자리 */
+.practice-link + .practice-link { margin-top: 6px; }
 .practice-link {
   margin-top: 10px; display: flex; align-items: center; gap: 12px;
   min-height: 64px; padding: 10px 12px 10px 10px; border-radius: 16px;
@@ -211,6 +212,11 @@ body {
     <a class="practice-link" href="practice.html">
       <svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#ffffff" stroke="#24315c" stroke-width="3"/><g stroke="#24315c" stroke-width="1.6" stroke-linecap="round"><line x1="20" y1="5.5" x2="20" y2="8"/><line x1="34.5" y1="20" x2="32" y2="20"/><line x1="20" y1="34.5" x2="20" y2="32"/><line x1="5.5" y1="20" x2="8" y2="20"/></g><line x1="20" y1="20" x2="14.3" y2="25.7" stroke="#e2483a" stroke-width="3.6" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="31" stroke="#2f6ad8" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="20" r="2.2" fill="#24315c"/></svg>
       <span class="pl-text"><span class="pl-title">시계 읽기 연습</span><span class="pl-sub">몇 시 · 몇 시 30분 문제</span></span>
+      <svg class="pl-go" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h11M10.5 5l5 5-5 5"/></svg>
+    </a>
+    <a class="practice-link" href="choose.html">
+      <svg class="mini" viewBox="0 0 40 40" aria-hidden="true"><g fill="#ffffff" stroke="#24315c" stroke-width="2.4"><circle cx="11" cy="11" r="8"/><circle cx="29" cy="11" r="8"/><circle cx="11" cy="29" r="8"/><circle cx="29" cy="29" r="8"/></g><g stroke-linecap="round"><line x1="29" y1="29" x2="26.5" y2="31.5" stroke="#e2483a" stroke-width="2.6"/><line x1="29" y1="29" x2="29" y2="35" stroke="#2f6ad8" stroke-width="1.8"/></g><circle cx="29" cy="29" r="9.8" fill="none" stroke="#2f9e5b" stroke-width="2.2"/></svg>
+      <span class="pl-text"><span class="pl-title">알맞은 시계 찾기</span><span class="pl-sub">보기 4개 중에서 고르기</span></span>
       <svg class="pl-go" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h11M10.5 5l5 5-5 5"/></svg>
     </a>
   </div>
